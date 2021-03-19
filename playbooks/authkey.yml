@@ -1,0 +1,36 @@
+---
+- hosts: all
+  tasks:
+    - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+      openssh_keypair:
+        path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+      delegate_to: 127.0.0.1
+
+    - name: Set authorized key took from file
+      authorized_key:
+        user: "{{ lookup('env', 'USER') }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Ensure home group write permission not set
+      file:
+        path: "{{ lookup('env', 'HOME') }}"
+        state: directory
+        mode: g-w
+
+    - name: Ensure .ssh dir permission mode
+      file:
+        path: "{{ lookup('env', 'HOME') }}/.ssh"
+        state: directory
+        mode: '700'
+
+    - name: Ensure authorized_keys permission mode
+      file:
+        path: "{{ lookup('env', 'HOME') }}/.ssh/authorized_keys"
+        mode: '600'
+
+    #- name: Password based logins are disabled - only public key based logins are allowed
+    #  lineinfile: dest=/etc/ssh/sshd_config regexp='^#?AuthenticationMethods' line='AuthenticationMethods publickey'
+    #- lineinfile: dest=/etc/ssh/sshd_config regexp='^#?PasswordAuthentication' line='PasswordAuthentication no'
+    #- lineinfile: dest=/etc/ssh/sshd_config regexp='^#?ChallengeResponseAuthentication' line='ChallengeResponseAuthentication no'
+    #- lineinfile: dest=/etc/ssh/sshd_config regexp='^#?PubkeyAuthentication' line='PubkeyAuthentication yes'

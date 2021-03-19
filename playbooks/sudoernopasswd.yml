@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: true
+  become_user: root
+  tasks:
+    - name: Setting random password
+      set_fact:
+        random_passwd: "{{ lookup('password', '/dev/null chars=ascii_lowercase,ascii_uppercase,digits,punctuation length=12') }}"
+
+    - name: Add local group
+      group:
+        name: "{{ lookup('env', 'USER') }}"
+        state: present
+
+    - name: Add local user
+      user:
+        name: "{{ lookup('env', 'USER') }}"
+        group: "{{ lookup('env', 'USER') }}"
+        shell: /bin/bash
+        home: "{{ lookup('env', 'HOME') }}"
+        create_home: yes
+        state: present
+
+    - name: Change user password
+      user:
+        name: "{{ lookup('env', 'USER') }}"
+        update_password: on_create
+        password: "{{ random_passwd|password_hash('sha512') }}"
+
+    - name: Validate the sudoers file before saving
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: "{{ lookup('env', 'USER') }}"
+        line: "{{ lookup('env', 'USER') }} ALL=(ALL) NOPASSWD:ALL"
+        validate: /usr/sbin/visudo -cf %s

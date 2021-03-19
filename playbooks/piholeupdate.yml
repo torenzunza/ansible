@@ -1,0 +1,13 @@
+---
+- hosts: all
+  #become: true
+  #become_user: root
+  tasks:
+    - name: Add date to log file
+      lineinfile:
+        path: ./.piholeupdate.log
+        line: "\n{{ lookup('pipe', 'date +%Y-%m-%d@%H:%M:%S')}}\n"
+        create: yes
+
+    - name: Update pi-hole
+      shell: pihole -up >> ".piholeupdate.log"
