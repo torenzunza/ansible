@@ -1,5 +1,3 @@
 # ansible
 
-**Text test in bold characters**
-
-What about text with no special treatment?
+Just a bunch of ansible experiments.
